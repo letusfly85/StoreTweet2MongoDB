@@ -1,16 +1,21 @@
-tweetstreamから取得したつぶやきをmongodbに格納するためのスクリプトです。
+gem install oauth
+gem install inifile
+gem install mongodb
 
-net/httpを利用してtweetstreamを取得します。
-対象は現在以下の2つとしています。
+These scripts store tweets from the 'Twitter Stream API' to the MongoDB.
+
+I use gem 'net/http' and get streams below.
 https://stream.twitter.com/1/statuses/sample.json
 https://stream.twitter.com/1/statuses/filter.json
 
-以下のストリームについてはキーワード検索を行えるように引数に
-配列を渡せるようにしています。
+Especially, for below stream I use a hash table which have keywords to the track attribute.
 https://stream.twitter.com/1/statuses/filter.json
 
-プロキシサーバーを介して接続しなければならない場合は、
-[.property]ファイルに記載をします。
-何も記載がなければプロキシサーバーは利用しないようにしています。
+If you want to use a proxy server, you had to write down the file '.property'.
+Otherwise, scripts don't use any proxy servers.
 
-現在作成中です。
+Now I'm coding.
+
+06/07/2012
+
+author: Shunsuke Wada
