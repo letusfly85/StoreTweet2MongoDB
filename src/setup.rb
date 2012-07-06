@@ -13,11 +13,5 @@ ini_file = IniFile.load("#{ROUTE_PATH}\/#{PROPERTY_FILE_NAME}")
 $val_key = {}
 ini_file.each do | section, key |
     eval("#{key} = #{ini_file[section][key]}")
-    eval("\$val_key[\"#{ini_file[section][key]}\"] = key")
-    puts $val_key["#{ini_file[section][key]}"]
-end
-
-$val_key.each do |k,v|
-    puts k
-    puts v
+    eval("\$val_key[#{ini_file[section][key]}] = key")
 end

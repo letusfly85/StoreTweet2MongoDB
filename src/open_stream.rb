@@ -57,10 +57,9 @@ module OpenStream
                     status = JSON.parse(chunk) rescue next
                     
                     next unless status['text']
-                    #puts status['id']
-                    #puts status['text']
                     include Insert2MongoDB
-                    insert2database(stream_name,
+                    collection_name = $val_key[stream_name]
+                    insert2database(collection_name,
                                     {"id"=> status['id'],"text" => status['text']})
                     
                     exit
