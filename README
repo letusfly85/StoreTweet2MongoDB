@@ -1,0 +1,16 @@
+tweetstreamから取得したつぶやきをmongodbに格納するためのスクリプトです。
+
+net/httpを利用してtweetstreamを取得します。
+対象は現在以下の2つとしています。
+https://stream.twitter.com/1/statuses/sample.json
+https://stream.twitter.com/1/statuses/filter.json
+
+以下のストリームについてはキーワード検索を行えるように引数に
+配列を渡せるようにしています。
+https://stream.twitter.com/1/statuses/filter.json
+
+プロキシサーバーを介して接続しなければならない場合は、
+[.property]ファイルに記載をします。
+何も記載がなければプロキシサーバーは利用しないようにしています。
+
+現在作成中です。
