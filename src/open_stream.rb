@@ -51,12 +51,16 @@ module OpenStream
         json_ary = []
         connection.start do |http|
             req.oauth!(http,@consumer,@access_token)
+
             http.request(req) do |response|
-            raise 'Response is not chuncked' unless response.chunked?
+                raise 'Response is not chuncked' unless response.chunked?
                 response.read_body do |chunk|
                     status = JSON.parse(chunk) rescue next
                     
                     next unless status['text']
+
+                    ##TODO
+                    # ハッシュテーブルの配列を作成するだけにしてdbにはインサートしない
                     include Insert2MongoDB
                     collection_name = $val_key[stream_name]
                     insert2database(collection_name,
