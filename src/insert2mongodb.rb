@@ -2,18 +2,18 @@ require 'rubygems'
 require 'mongo'
 
 module Insert2MongoDB
-    def initialize
+    def connect
         @con = Mongo::Connection.new(MONGO_HOST_NAME,MONGO_HOST_PORT)
         @db  = @con.db(MONGO_DB_NAME)
     end
 
     def insert2database(stream_name,hash)
         begin
-            initialize
+            connect
             @db[stream_name].insert(hash)
 
         rescue => e
-            puts 'enter!'
+            puts 'you enter to the ERROR scope!'
             puts e
         ensure
             @con.close

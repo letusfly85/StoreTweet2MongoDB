@@ -1,8 +1,7 @@
 require './setup'
-require './insert2mongodb'
 
 module OpenStream
-    def initialize
+    def generate_keys
         @consumer = OAuth::Consumer.new(
             TWITTER_CONSUMER_KEY,
             TWITTER_CONSUMER_SECRET,
@@ -35,11 +34,10 @@ module OpenStream
     end
 
     def twitter_stream(stream_name,key_hash)
-        initialize
-
+        generate_keys
         stream_uri = URI::parse(stream_name)
 
-        unless key_hash["keywords"].length == ZERO
+        unless key_hash["keywords"].nil?
             key_list = array2key_list(key_hash["keywords"])
 
             req = Net::HTTP::Post.new(stream_uri.request_uri)
