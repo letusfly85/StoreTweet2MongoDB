@@ -14,6 +14,8 @@ module OpenStream
             TWITTER_OAUTH_TOKEN,
             TWITTER_OAUTH_TOKEN_SECRET
         )
+
+		@countup = ZERO
     end
 
     def http_connection(host,port)
@@ -56,17 +58,22 @@ module OpenStream
                 raise 'Response is not chuncked' unless response.chunked?
                 response.read_body do |chunk|
                     status = JSON.parse(chunk) rescue next
-                    
+
                     next unless status['text']
 
-                    ##TODO
-                    # ハッシュテーブルの配列を作成するだけにしてdbにはインサートしない
-                    include Insert2MongoDB
-                    collection_name = $val_key[stream_name].downcase
-                    insert2database(collection_name,
-                                    {"id"=> status['id'],"text" => status['text']})
-                    
-                    exit
+					if key_hash["return_flg"] == "once"
+                    	exit
+					elsif key_hash["return_flg"] == "hash"
+						@countup += 1
+						json_ary << status
+						if @countup >= 10
+							return json_ary
+						end
+					else
+						puts status
+						exit
+					end
+
                 end
             end
         end
@@ -81,10 +88,5 @@ module OpenStream
         return key_list
     end
 
-    attr_accessor :consumer,:access_token
+    attr_accessor :consumer,:access_token,:countup
 end
-
-# 動作確認用
-#include OpenStream
-#twitter_stream(SAMPLE_STREAM,{})
-#twitter_stream(FILTER_STREAM,{"keywords" => ['job','haskell','change']})
