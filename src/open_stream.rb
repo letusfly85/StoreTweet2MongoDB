@@ -18,15 +18,15 @@ module OpenStream
     end
 
     def http_connection(host,port)
-        # http用のコネクションを取得する
-        # プロキシがプロパティファイルに記載されていれば利用する
         if HTTP_PROXY_ADDR.nil? or HTTP_PROXY_ADDR.length == ZERO
             connection = Net::HTTP.new(host,port)
         else
+#
             connection = Net::HTTP::Proxy(HTTP_PROXY_ADDR,HTTP_PROXY_PORT).
                                  new(host,port)
         end
 
+        #TODO check the meanings of Net::HTTP's options such like below 
         connection.use_ssl = true
         connection.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
