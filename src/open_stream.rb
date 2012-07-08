@@ -53,16 +53,14 @@ module OpenStream
 
             http.request(req) do |response|
                 raise 'Response is not chuncked' unless response.chunked?
+
                 response.read_body do |chunk|
                     status = JSON.parse(chunk) rescue next
-                    
                     next unless status['text']
 
                     @countup += 1
                     json_ary << status
-                    if @countup >= TWEETS_ARRAY_MAX_SIZE
-                        return json_ary
-                    end
+                    return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
                 end
             end
         end
@@ -70,9 +68,7 @@ module OpenStream
 
     def array2key_list(array)
         key_list = ""
-        array.each do |key|
-            key_list += key + ","
-        end
+        array.each {|key| key_list += key + ","}
 
         return key_list
     end
