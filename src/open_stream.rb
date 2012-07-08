@@ -1,3 +1,4 @@
+#TODO stop to use a relative path
 require './setup'
 
 module OpenStream
