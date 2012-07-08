@@ -14,7 +14,7 @@ module OpenStream
             TWITTER_OAUTH_TOKEN_SECRET
         )
 
-		@countup = ZERO
+        @countup = ZERO
     end
 
     def http_connection(host,port)
