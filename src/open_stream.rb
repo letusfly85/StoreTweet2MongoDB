@@ -56,22 +56,20 @@ module OpenStream
                 raise 'Response is not chuncked' unless response.chunked?
                 response.read_body do |chunk|
                     status = JSON.parse(chunk) rescue next
-
+                    
                     next unless status['text']
-
-					if key_hash["return_flg"] == "once"
+                    if key_hash["return_flg"] == "once"
                     	exit
-					elsif key_hash["return_flg"] == "hash"
-						@countup += 1
-						json_ary << status
-						if @countup >= 10
-							return json_ary
-						end
-					else
-						puts status
-						exit
-					end
-
+                    elsif key_hash["return_flg"] == "hash"
+                        @countup += 1
+                        json_ary << status
+                        if @countup >= 10
+                            return json_ary
+                        end
+		    else
+                        puts status
+                        exit
+                    end
                 end
             end
         end
