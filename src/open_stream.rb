@@ -33,15 +33,15 @@ module OpenStream
         return connection
     end
 
-    def twitter_stream(stream_name,key_hash)
+    def twitter_stream(stream_name,options)
         generate_keys
         stream_uri = URI::parse(stream_name)
 
-        unless key_hash["keywords"].nil?
-            key_list = array2key_list(key_hash["keywords"])
+        if stream_name == FILTER_STREAM
+            key_list = array2key_list(options[:post_parameters])
 
             req = Net::HTTP::Post.new(stream_uri.request_uri)
-            req.set_form_data('track' => key_list)
+            req.set_form_data(:track => key_list)
         else
             req = Net::HTTP::Get.new(stream_uri.request_uri)
         end
@@ -58,9 +58,9 @@ module OpenStream
                     status = JSON.parse(chunk) rescue next
                     
                     next unless status['text']
-                    if key_hash["return_flg"] == "once"
+                    if    options[:return_flg] == "once"
                     	exit
-                    elsif key_hash["return_flg"] == "hash"
+                    elsif options[:return_flg] == "hash"
                         @countup += 1
                         json_ary << status
                         if @countup >= 10
