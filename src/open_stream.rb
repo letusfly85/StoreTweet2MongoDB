@@ -21,7 +21,6 @@ module OpenStream
         if HTTP_PROXY_ADDR.nil? or HTTP_PROXY_ADDR.length == ZERO
             connection = Net::HTTP.new(host,port)
         else
-#
             connection = Net::HTTP::Proxy(HTTP_PROXY_ADDR,HTTP_PROXY_PORT).
                                  new(host,port)
         end
@@ -58,17 +57,11 @@ module OpenStream
                     status = JSON.parse(chunk) rescue next
                     
                     next unless status['text']
-                    if    options[:return_flg] == "once"
-                    	exit
-                    elsif options[:return_flg] == "hash"
-                        @countup += 1
-                        json_ary << status
-                        if @countup >= 10
-                            return json_ary
-                        end
-		    else
-                        puts status
-                        exit
+
+                    @countup += 1
+                    json_ary << status
+                    if @countup >= TWEETS_ARRAY_MAX_SIZE
+                        return json_ary
                     end
                 end
             end

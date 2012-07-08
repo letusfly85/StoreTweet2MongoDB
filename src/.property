@@ -21,3 +21,6 @@ ZERO=0
 MONGO_HOST_NAME='localhost'
 MONGO_HOST_PORT=27017
 MONGO_DB_NAME='twitter'
+
+[open_stream_module]
+TWEETS_ARRAY_MAX_SIZE=10
