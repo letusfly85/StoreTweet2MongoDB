@@ -8,10 +8,11 @@ TWITTER_OAUTH_TOKEN_SECRET=''
 [streams]
 SAMPLE_STREAM='https://stream.twitter.com/1/statuses/sample.json'
 FILTER_STREAM='https://stream.twitter.com/1/statuses/filter.json'
+FIREHOSE_STREAM='https://stream.twitter.com/1/statuses/firehose.json'
 
 [http_proxy]
 HTTP_PROXY_ADDR=''
-HTTP_PROXY_PORT=
+HTTP_PROXY_PORT=''
 
 [number]
 ZERO=0
