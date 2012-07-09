@@ -49,21 +49,26 @@ module OpenStream
         connection = http_connection(stream_uri.host,stream_uri.port)
 
         json_ary = []
-        connection.start do |http|
-            req.oauth!(http,@consumer,@access_token)
+        begin
+            connection.start do |http|
+                req.oauth!(http,@consumer,@access_token)
 
-            http.request(req) do |response|
-                raise 'Response is not chuncked' unless response.chunked?
+                http.request(req) do |response|
+                    raise 'Response is not chuncked' unless response.chunked?
 
-                response.read_body do |chunk|
-                    status = JSON.parse(chunk) rescue next
-                    next unless status['text']
+                    response.read_body do |chunk|
+                        status = JSON.parse(chunk) rescue next
+                        next unless status['text']
 
-                    @countup += 1
-                    json_ary << status
-                    return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
+                        @countup += 1
+                        json_ary << status
+                        return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
+                    end
                 end
             end
+
+        ensure
+            connection = nil
         end
     end
 
