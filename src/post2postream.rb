@@ -51,8 +51,8 @@ module Post2Postream
         return false
     end
 
-
-    def inputs_mongo
+    #TODO decide from where input data should be pulled
+    def post2postream
         include OpenStream
         include Utils
 
@@ -67,26 +67,38 @@ module Post2Postream
         uri_str = "https://#{POSTREAM_SERVER_HOST}:#{POSTREAM_SERVER_PORT}/api/streams/posts/new"
         json_ary.each do |json|
             tweet = {}
-            http_link = json[:text].scan(/http\:\/\/[\w.\/]*/)[0]
-            contents  = json[:text].delete(http_link)
+            http_link = json["text"].scan(/http\:\/\/[\w.\/]*/)[0] rescue http_link = nil
+            contents  = json["text"].delete(http_link) unless http_link == nil
 
-            tweet[:text]       = contents
-            tweet[:link_url]   = recur_extend_uri(json[:text].scan(/http\:\/\/[\w.\/]*/)[0])
-            tweet[:link_title] = get_html_title(tweet[:link_url])
+            tweet["text"]       = contents
 
-            unless contain_ng_words?(tweet[:text])
-            #https_post(uri_str, post_body(uri_str, tweet))
-                display(json,tweet)
+            unless http_link == nil
+                tweet["link_url"]   = recur_extend_uri(json["text"].scan(/http\:\/\/[\w.\/]*/)[0])
+                tweet["link_title"] = get_html_title(tweet["link_url"])
+            end
+
+            unless contain_ng_words?(tweet["text"])
+                #https_post(uri_str, post_body(uri_str, tweet))
+                #display(json,tweet)
                 nil
             end
         end
     end
 
+
+    def input_data2mongodb
+        include OpenStream
+        include Insert2MongoDB
+
+        nil
+    end
+
+    #TODO if it become to be needless, delete this function
     def display(json,tweet)
-            puts "#{json[:id]} : #{json[:created_at]}"
-            puts " => http_link        : #{tweet[:link_url]}"
-            puts " => http_link_title  : #{tweet[:link_title]}"
-            puts " => contents         : #{tweet[:text]}\n"
+            puts "#{json["id"]} : #{json["created_at"]}"
+            puts " => http_link        : #{tweet["link_url"]}"
+            puts " => http_link_title  : #{tweet["link_title"]}"
+            puts " => contents         : #{tweet["text"]}\n"
     end
 
 end
@@ -95,14 +107,15 @@ end
 include Post2Postream
 begin
     inputs_mongo
-rescue => e
-    case e
+rescue => error
+    case  error
     when EOFError
-        puts 'error!'
-        puts e
+        puts '......EOFError.....'
+        puts error
         inputs_mongo
     else
-        puts 'other error'
-        puts e
+        puts '......OTHER..ERROR.....'
+        puts '......The authour should add a new error pattern....'
+        puts error
     end
 end
