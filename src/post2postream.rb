@@ -6,7 +6,6 @@ module Post2Postream
 
     def https_post(uri_str, msg)
         msg_json = msg.to_json
-
         header = {
             'X-Kodama'       => 'Request/API',
             'Content-Type'   => 'application/json',
@@ -14,10 +13,16 @@ module Post2Postream
             'Content-Length' => msg_json.bytesize.to_s
         }
 
+        #TODO decide which I use Faraday or not
         uri = URI(uri_str)
-        conn = Faraday.new("https://#{uri.host}",
-                            :ssl => {:verify => false, :timeout => 20, :open_timeout => 20},
-                            :proxy => URI.parse("http://#{HTTP_PROXY_ADDR}:#{HTTP_PROXY_PORT}"))
+        unless HTTP_PROXY_ADDR == nil or HTTP_PROXY_ADDR.length == ZERO
+            conn = Faraday.new("https://#{uri.host}",
+                                :ssl => {:verify => false, :timeout => 20, :open_timeout => 20},
+                                :proxy => URI.parse("http://#{HTTP_PROXY_ADDR}:#{HTTP_PROXY_PORT}"))
+        else
+            conn = Faraday.new("https://#{uri.host}",
+                                :ssl => {:verify => false, :timeout => 20, :open_timeout => 20})
+        end
 
         begin
             res = conn.post do |req|
@@ -35,7 +40,8 @@ module Post2Postream
         body = {
             :post => {
                 :content => tweet['text'],
-                :links   => [{:title => tweet['link_title'], :link => tweet['link_url']}],
+                :links   => [ { :title => tweet['link_title'],
+                                :link  => tweet['link_url']   } ],
         },
         :apiKey => POSTREAM_API_KEY,
         }
@@ -84,7 +90,6 @@ module Post2Postream
             end
         end
     end
-
 
     def input_data2mongodb
         include OpenStream
