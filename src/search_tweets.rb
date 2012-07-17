@@ -48,7 +48,16 @@ module SearchTweets
     end
 
     def user_weight(tweet_user_name)
-        100
+        connect
+
+        #TODO
+        res = @db[MONGO_KNR_USER_POINT].find({"user_name" => tweet_user_name}).findOne
+        if res["point"] == nil
+            puts "You have to register #{tweet_user_name}."
+            return 0
+        else
+            return res["point"]
+        end
     end
 
     attr_accessor :con, :db
