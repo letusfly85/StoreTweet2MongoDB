@@ -1,5 +1,6 @@
 require './setup'
 require './open_stream'
+require './search_tweets'
 require './utils'
 
 module Post2Postream
@@ -37,56 +38,44 @@ module Post2Postream
     end
 
     def post_body(uri,tweet)
-        body = {
-            :post => {
-                :content => tweet['text'],
-                :links   => [ { :title => tweet['link_title'],
-                                :link  => tweet['link_url']   } ],
-        },
-        :apiKey => POSTREAM_API_KEY,
-        }
+            body = {
+                :post => {
+                    :content => tweet['text'],
+                    :links   => [ { :title    => tweet['link_title'],
+                                    :link     => tweet['link_url'],
+                                    :imageUrl => tweet['image_url'] 
+                                 }],
+                },
+            :apiKey => POSTREAM_API_KEY,
+            }
     end
 
     def contain_ng_words?(text)
-        #TODO consider in where words list should be.
-        ng_word_list = ['ねとらぼ']
-        ng_word_list.each do |ng_word|
-            /"#{ng_word}"/ =~ text
-            return true
-        end
-        return false
+        nil
     end
 
-    #TODO decide from where input data should be pulled
+    def text_check(tweet)
+        nil
+    end
+
     def post2postream
-        include OpenStream
         include Utils
+        include OpenStream
+        include SearchTweets
 
-        #TODO consider in where post parameters should be
-        json_ary = twitter_stream(FILTER_STREAM,
-                                   { :post_parameters => 
-                                       ['ITmedia','AndroidNewsJP',
-                                       'itmedia_m','itmedia','haskell','ocalm',
-                                       'http://news.livedoor.com/category/list/25/'] },
-                                 )
+        #POSTREAM_URI_NEW
+        tweets_list = search_mongo
 
-        uri_str = "https://#{POSTREAM_SERVER_HOST}:#{POSTREAM_SERVER_PORT}/api/streams/posts/new"
-        json_ary.each do |json|
-            tweet = {}
-            http_link = json["text"].scan(/http\:\/\/[\w.\/]*/)[0] rescue http_link = nil
-            contents  = json["text"].delete(http_link) unless http_link == nil
+        tweets_list.each do |tweet_list|
+            next if tweet_list['contents'] == nil
 
-            tweet["text"]       = contents
+            tweet_list['contents'].each do |tweet|
+                next if tweet["posted_count"] > 0
 
-            unless http_link == nil
-                tweet["link_url"]   = recur_extend_uri(json["text"].scan(/http\:\/\/[\w.\/]*/)[0])
-                tweet["link_title"] = get_html_title(tweet["link_url"])
-            end
-
-            unless contain_ng_words?(tweet["text"])
-                #https_post(uri_str, post_body(uri_str, tweet))
-                #display(json,tweet)
-                nil
+                post_message = {}
+                
+                next unless text_check(tweet)
+                post_message = generate_post_contents(tweet)
             end
         end
     end
@@ -98,29 +87,80 @@ module Post2Postream
         nil
     end
 
-    #TODO if it become to be needless, delete this function
-    def display(json,tweet)
-            puts "#{json["id"]} : #{json["created_at"]}"
-            puts " => http_link        : #{tweet["link_url"]}"
-            puts " => http_link_title  : #{tweet["link_title"]}"
-            puts " => contents         : #{tweet["text"]}\n"
+    def re_each(hash,i)
+        tab = ""
+        i.times {tab += "\t"}
+        if hash.instance_of?(BSON::OrderedHash)
+            i += 1
+            hash.each do |k,v|
+                next if k == 'user'
+                if v.instance_of?(BSON::OrderedHash)
+                    puts  "#{tab} #{k} : " 
+                else
+                    print "#{tab} #{k} : " 
+                end
+                re_each(v,i)
+            end
+        else
+            puts "#{hash}" 
+        end
+        i += 1
     end
 
-end
+    def retweet_urls(value)
+        value["retweeted_status"]["entities"]["urls"]
+    end
 
+    def slice_http_link_from_tweet_text(value)
+        begin
+            indices = []
+            value["retweeted_status"]["entities"]["urls"].each do |url|
+                indices << url["indices"]
+            end
 
-include Post2Postream
-begin
-    inputs_mongo
-rescue => error
-    case  error
-    when EOFError
-        puts '......EOFError.....'
-        puts error
-        inputs_mongo
-    else
-        puts '......OTHER..ERROR.....'
-        puts '......The authour should add a new error pattern....'
-        puts error
+            pre_pos = 0
+            whole_text = value["retweeted_status"]["text"]
+            text = ""
+            indices.each do |ind|
+                start_pos = ind[0] - 1
+                end_pos   = ind[1] + 1
+
+                text += whole_text[pre_pos..start_pos]
+                pre_pos = end_pos
+            end
+            text += whole_text[pre_pos..whole_text.length-1] unless pre_pos-1 == whole_text.length
+        rescue => e
+            puts whole_text
+            puts value["id_str"]
+            puts e
+            raise
+        end
+        
+        return text
+    end
+
+    def generate_post_contents(value)
+        tweet = {}
+        #re_each(value,1)
+        #exit
+
+        tweet["user_name"]  = value["retweeted_status"]["user"]["name"]
+        tweet["text"]       = "#{ value["point"]} Pointの投稿です。>>=       " +
+                              slice_http_link_from_tweet_text(value)
+
+        begin
+            expanded_urls = retweet_urls(value)
+            tweet["link_url"] = expanded_urls[0]["expanded_url"]
+        rescue 
+            tweet["link_url"] = "Nothing"
+        end
+
+        tweet["link_title"] = get_html_title(tweet["link_url"]) rescue  tweet["link_title"] = "参照元URL"
+
+        unless value['user']['profile_image_url_https'] == nil
+            tweet["imageUrl"]   = value['user']['profile_image_url_https']
+        end
+
+        return tweet
     end
 end
