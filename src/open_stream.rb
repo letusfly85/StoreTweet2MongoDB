@@ -1,5 +1,6 @@
 #TODO stop to use a relative path
 require './setup'
+require './insert2mongodb'
 
 module OpenStream
     def generate_keys
@@ -27,8 +28,9 @@ module OpenStream
         end
 
         #TODO check the meanings of Net::HTTP's options such like below 
-        connection.use_ssl = true
-        connection.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        connection.use_ssl      = true
+        connection.verify_mode  = OpenSSL::SSL::VERIFY_NONE
+        connection.read_timeout = MAX_READ_TIMEOUT
 
         return connection
     end
@@ -42,6 +44,9 @@ module OpenStream
 
             req = Net::HTTP::Post.new(stream_uri.request_uri)
             req.set_form_data(:track => key_list)
+        #elsif stream_name == USER_STREAM
+        #    req = Net::HTTP::Post.new(stream_uri.request_uri)
+        #    req.set_form_data(:follow => "topitmedia,")
         else
             req = Net::HTTP::Get.new(stream_uri.request_uri)
         end
@@ -57,12 +62,51 @@ module OpenStream
                     raise 'Response is not chuncked' unless response.chunked?
 
                     response.read_body do |chunk|
-                        status = JSON.parse(chunk) rescue next
-                        next unless status['text']
+                        buf = ""
+                        buf << chunk
 
-                        @countup += 1
-                        json_ary << status
-                        return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
+                        # 改行コードで区切って一行ずつ読み込み
+                        while (line = buf[/.+?(\r\n)+/m]) != nil 
+                            begin
+                                # 読み込み済みの行を削除
+                                buf.sub!(line,"") 
+                                line.strip!
+                                status = JSON.parse(line)
+                                puts status
+                                insert2database($val_key[USER_STREAM].downcase,status)
+
+                                #json_ary << status
+                                #sleep(1)
+                                #@countup += 1
+                                #return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
+                            rescue
+                                # parseに失敗したら、次のループでchunkをもう1個読み込む
+                                break 
+                            end
+                            if status['text']
+                                user = status['user']
+                                puts "#{user['screen_name']}: #{CGI.unescapeHTML(status['text'])}"
+                            end
+                        end
+
+#                        status = nil
+#                        begin
+#                            status = JSON.parse(chunk)
+#                            puts status
+#                        rescue =>e
+#                            puts e
+#                            next
+#                        end
+#
+#                        next unless status['text'] 
+#
+#                        #my_hash = { :id => status['id'], :text => status['text'] }
+#                        #json_ary << my_hash
+#                        json_ary << status
+                        
+#                        sleep(1)
+#                        @countup += 1
+#                        return json_ary if @countup >= TWEETS_ARRAY_MAX_SIZE
                     end
                 end
             end
