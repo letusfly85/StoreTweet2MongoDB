@@ -1,0 +1,22 @@
+gem install oauth
+gem install inifile
+gem install mongodb
+
+These scripts store tweets from the 'Twitter Stream API' to the MongoDB.
+
+I use gem 'net/http' and get streams below.
+https://stream.twitter.com/1/statuses/sample.json
+https://stream.twitter.com/1/statuses/filter.json
+https://stream.twitter.com/1/statuses/firehose.json
+
+Especially, for below stream I use a hash table which have post parameters for the track.
+https://stream.twitter.com/1/statuses/filter.json
+
+If you want to use a proxy server, you had to write down the file '.property'.
+Otherwise, scripts don't use any proxy servers.
+
+Now I'm coding.
+
+08/07/2012
+
+author: Shunsuke Wada
